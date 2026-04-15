@@ -1,0 +1,58 @@
+{{ define "content" }}
+<div class="row justify-content-center">
+    <div class="col-md-9">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white pb-0 border-bottom-0">
+                <div class="d-flex justify-content-between align-items-center mt-2 mb-3">
+                    <h4 class="text-primary mb-0">
+                        <i class="bi bi-key-fill text-warning me-2"></i>Chaves SSH
+                    </h4>
+                    <a href="/users" class="btn btn-outline-secondary btn-sm">Voltar</a>
+                </div>
+                <div class="alert alert-light border">
+                    <i class="bi bi-person-badge text-primary me-2"></i>
+                    <strong>{{ .Data.User.CN }}</strong> ({{ .Data.User.UID }})
+                </div>
+            </div>
+
+            <div class="card-body">
+                <form method="POST" action="/manage_keys?dn={{ .Data.User.DN }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nova Chave Pública (Cole o conteúdo do .pub aqui)</label>
+                        <textarea name="key" class="form-control font-monospace" rows="4" 
+                            placeholder="ssh-rsa AAAAB3..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Adicionar Chave</button>
+                </form>
+
+                <hr class="my-4">
+
+                <h5 class="text-secondary mb-3">Chaves Cadastradas</h5>
+
+                {{ if .Data.Keys }}
+                    <div class="list-group">
+                    {{ range $idx, $key := .Data.Keys }}
+                        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div class="text-truncate me-3" style="max-width: 80%;">
+                                <code class="text-dark small bg-light px-2 py-1 rounded">
+                                    {{ $key }}
+                                </code>
+                            </div>
+                            <form method="POST" action="/delete_key?dn={{ $.Data.User.DN }}" class="m-0" onsubmit="return confirm('Remover esta chave permanente?');">
+                                <input type="hidden" name="key_index" value="{{ $idx }}">
+                                <input type="hidden" name="key" value="{{ $key }}">
+                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Remover chave">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    {{ end }}
+                    </div>
+                {{ else }}
+                    <div class="alert alert-secondary text-center">Nenhuma chave SSH cadastrada.</div>
+                {{ end }}
+            </div>
+        </div>
+    </div>
+</div>
+{{ end }}

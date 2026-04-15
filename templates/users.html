@@ -1,0 +1,92 @@
+{{ define "content" }}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="text-secondary">Painel de Usuários</h3>
+    <a href="/add" class="btn btn-primary rounded-pill shadow px-4">
+        <i class="bi bi-plus-lg"></i> Novo Usuário
+    </a>
+</div>
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link {{ if eq .Data.CurrentCat "all" }}active{{ end }}" href="/users?cat=all">
+            Todos
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ if eq .Data.CurrentCat "admin" }}active{{ end }}"
+            href="/users?cat=admin">
+            <i class="bi bi-shield-lock"></i> Admins
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ if eq .Data.CurrentCat "prof" }}active{{ end }}"
+            href="/users?cat=prof">
+            <i class="bi bi-mortarboard"></i> Professores
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ if eq .Data.CurrentCat "aluno" }}active{{ end }}"
+            href="/users?cat=aluno">
+            <i class="bi bi-backpack"></i> Alunos
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ if eq .Data.CurrentCat "service" }}active{{ end }}"
+            href="/users?cat=service">
+            <i class="bi bi-robot"></i> Robôs
+        </a>
+    </li>
+</ul>
+
+<div class="card border-top-0 rounded-0 rounded-bottom shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>UID</th>
+                    <th>Login</th>
+                    <th>Nome</th>
+                    <th>Shell</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{ range .Data.Users }}
+                <tr>
+                    <td><span class="badge bg-secondary">{{ .UIDNumber }}</span></td>
+                    <td class="fw-bold text-primary">
+                        {{ .UID }}{{ if .Aliases }}{{ range .Aliases }}, {{ . }}{{ end }}{{ end }}
+                    </td>
+                    <td>{{ .CN }}</td>
+                    <td>
+                        {{ if or (eq .Shell "/bin/false") (eq .Shell "/usr/sbin/nologin") }}
+                        <span class="badge bg-danger rounded-pill">BLOQUEADO</span>
+                        {{ else }}
+                        <span class="badge bg-success rounded-pill">ATIVO</span>
+                        {{ end }}
+
+                        <div class="text-muted small" style="font-size: 0.75rem;">
+                            {{ .Shell }}
+                        </div>
+                    </td>
+                    <td>
+                        <a href="/edit?dn={{ .DN }}" class="btn btn-sm btn-outline-primary me-1"
+                            title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="/manage_keys?dn={{ .DN }}" class="btn btn-sm btn-outline-dark me-1"
+                            title="Gerenciar Chaves SSH">
+                            <i class="bi bi-key-fill"></i>
+                        </a>
+                        <a href="/delete?dn={{ .DN }}" class="btn btn-sm btn-outline-danger"
+                            onclick="return confirm('Tem certeza?');">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {{ end }}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{ end }}

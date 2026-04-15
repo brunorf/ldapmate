@@ -1,0 +1,16 @@
+{{ define "content" }}
+<div class="row justify-content-center">
+    <div class="col-md-4">
+        <div class="card p-4">
+            <h4 class="text-center mb-4 text-primary">Acesso Administrativo</h4>
+            <form method="POST" action="/login">
+                <div class="mb-3">
+                    <label for="password" class="form-label">Senha do Admin LDAP</label>
+                    <input type="password" name="password" id="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Entrar</button>
+            </form>
+        </div>
+    </div>
+</div>
+{{ end }}

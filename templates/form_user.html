@@ -1,0 +1,79 @@
+{{ define "content" }}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card p-4 shadow-sm border-0">
+            <h4 class="text-primary mb-4">
+                {{ if .Data.User }}Editar Usuário{{ else }}Novo Usuário{{ end }}
+            </h4>
+            <form method="POST" action="{{ if .Data.User }}/edit?dn={{ .Data.User.DN }}{{ else }}/add{{ end }}">
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nome Completo</label>
+                    <input type="text" name="fullname" class="form-control" value="{{ if .Data.User }}{{ .Data.User.CN }}{{ end }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Login (uid)</label>
+                    <input type="text" name="username" class="form-control" value="{{ if .Data.User }}{{ .Data.User.UID }}{{ end }}" {{ if .Data.User }}readonly{{ end }} required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Aliases / Logins Antigos (Opcional)</label>
+                    <input type="text" name="aliases" class="form-control" value="{{ if .Data.User }}{{ range $i, $a := .Data.User.Aliases }}{{if $i}}, {{end}}{{ $a }}{{ end }}{{ end }}">
+                    <div class="form-text">Exemplo: bruno, b.silva (Separe por vírgula)</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Shell / Acesso</label>
+                    <select name="loginShell" class="form-select">
+                        <option value="/bin/bash" {{ if and .Data.User (eq .Data.User.Shell "/bin/bash") }}selected{{ end }}>Bash (Padrão)</option>
+                        <option value="/bin/sh" {{ if and .Data.User (eq .Data.User.Shell "/bin/sh") }}selected{{ end }}>Sh</option>
+                        <option value="/bin/zsh" {{ if and .Data.User (eq .Data.User.Shell "/bin/zsh") }}selected{{ end }}>Zsh</option>
+                        <option value="/bin/false" {{ if and .Data.User (eq .Data.User.Shell "/bin/false") }}selected{{ end }}>BLOQUEADO (/bin/false)</option>
+                        <option value="/usr/sbin/nologin" {{ if and .Data.User (eq .Data.User.Shell "/usr/sbin/nologin") }}selected{{ end }}>Sem Login (/usr/sbin/nologin)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Senha</label>
+                    <input type="password" name="password" class="form-control">
+                    <div class="form-text">Deixe em branco para gerar uma senha aleatória no cadastro, ou para não alterar na edição.</div>
+                </div>
+
+                {{ if not .Data.User }}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Categoria</label>
+                    <select name="category" class="form-select" required>
+                        <option value="aluno">Aluno</option>
+                        <option value="prof">Professor</option>
+                        <option value="admin">Admin</option>
+                        <option value="service" >Serviço/Bot</option>
+                        <option value="guest">Convidado</option>
+                    </select>
+                </div>
+                {{ end }}
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Grupos de Acesso</label>
+                    <select name="groups" class="form-select" multiple size="6" required>
+                        {{ $userGroups := .Data.UserGroups }}
+                        {{ range .Data.AvailableGroups }}
+                        {{ $currentCN := .CN }}
+                        {{ $isSelected := false }}
+                        {{ if $userGroups }}{{ range $ug := $userGroups }}{{ if eq $ug $currentCN }}{{ $isSelected = true }}{{ end }}{{ end }}{{ end }}
+                        <option value="{{ .CN }}" {{ if $isSelected }}selected{{ end }}>
+                            {{ .CN }}
+                        </option>
+                        {{ end }}
+                    </select>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="/users" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-success fw-bold">Salvar Usuário</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{{ end }}

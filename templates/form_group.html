@@ -1,0 +1,46 @@
+{{ define "content" }}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card p-4 shadow-sm border-0">
+            <h4 class="text-primary mb-4">
+                {{ if .Data.EditMode }}Editar Grupo{{ else }}Novo Grupo{{ end }}
+            </h4>
+            <form method="POST" action="{{ if .Data.EditMode }}/groups/edit/{{ .Data.Group.CN }}{{ else }}/groups/add{{ end }}">
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nome do Grupo</label>
+                    <input type="text" name="name" class="form-control" value="{{ if .Data.Group }}{{ .Data.Group.CN }}{{ end }}" {{ if .Data.EditMode }}readonly{{ end }} required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">GID</label>
+                    <input type="number" name="gid" class="form-control" value="{{ if .Data.Group }}{{ .Data.Group.GID }}{{ else }}{{ .Data.SuggestedGID }}{{ end }}" {{ if .Data.EditMode }}readonly{{ end }} required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Descrição (Opcional)</label>
+                    <input type="text" name="description" class="form-control" value="{{ if .Data.Group }}{{ .Data.Group.Desc }}{{ end }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Membros do Grupo</label>
+                    <select name="members" class="form-select" multiple size="8">
+                        {{ $groupMembers := .Data.GroupMembers }}
+                        {{ range .Data.AvailableUsers }}
+                        <option value="{{ .DN }}" 
+                            {{ if $groupMembers }}{{ range $gm := $groupMembers }}{{ if eq $gm $.DN }}selected{{ end }}{{ end }}{{ end }}>
+                            {{ .CN }} ({{ .UID }})
+                        </option>
+                        {{ end }}
+                    </select>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="/groups" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-success fw-bold">Salvar Grupo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{{ end }}
