@@ -1,4 +1,4 @@
-module dirmate
+module ldapmate
 
 go 1.25.0
 

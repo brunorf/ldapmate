@@ -3,13 +3,13 @@ package main
 import (
 	"encoding/gob"
 	"fmt"
-	"dirmate/internal/config"
-	"dirmate/templates"
+	"ldapmate/internal/config"
+	"ldapmate/templates"
 	"html/template"
 	"log"
 	"net/http"
 
-	"dirmate/internal/ldapclient"
+	"ldapmate/internal/ldapclient"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -55,11 +55,6 @@ func getLDAP(r *http.Request) *ldapclient.LDAPBackend {
 }
 
 func main() {
-	if err := config.LoadConfig("config.json"); err != nil {
-		fmt.Println("Criando config.json padrão. Ajuste e rode novamente!")
-		config.CreateDefaultConfig("config.json")
-		return
-	}
 	store = sessions.NewCookieStore([]byte(config.Cfg.SecretKey))
 
 	if !runCLI() {

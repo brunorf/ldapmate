@@ -1,0 +1,30 @@
+{
+  "ldap_host": "localhost",
+  "ldap_base": "dc=example,dc=com",
+  "admin_dn": "cn=admin,dc=example,dc=com",
+  "secret_key": "sua_chave_secreta_aqui",
+  "category_ranges": {
+    "admin": [
+      10000,
+      10999
+    ],
+    "aluno": [
+      30000,
+      89999
+    ],
+    "guest": [
+      90000,
+      99999
+    ],
+    "prof": [
+      20000,
+      29999
+    ],
+    "service": [
+      11000,
+      19999
+    ]
+  },
+  "default_category": "aluno",
+  "server_port": ":8080"
+}

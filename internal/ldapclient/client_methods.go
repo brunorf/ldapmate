@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"dirmate/internal/config"
+	"ldapmate/internal/config"
 	"github.com/go-ldap/ldap/v3"
 )
 

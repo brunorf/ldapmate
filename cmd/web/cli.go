@@ -7,8 +7,8 @@ import (
 	"strings"
 	"syscall"
 
-	"dirmate/internal/config"
-	"dirmate/internal/ldapclient"
+	"ldapmate/internal/config"
+	"ldapmate/internal/ldapclient"
 
 	"github.com/peterh/liner"
 	"golang.org/x/term"
@@ -57,7 +57,7 @@ func runCLI() bool {
 }
 
 func printMainHelp() {
-	fmt.Println("Uso: ./dirmate <comando> [argumentos]")
+	fmt.Println("Uso: ./ldapmate <comando> [argumentos]")
 	fmt.Println("\nComandos disponíveis:")
 	fmt.Println("  serve / server Inicia o servidor web")
 	fmt.Println("  shell          Inicia um shell interativo (requer senha apenas uma vez)")
@@ -65,11 +65,11 @@ func printMainHelp() {
 	fmt.Println("  group          Gerenciar grupos (add, edit, list, del)")
 	fmt.Println("  key            Gerenciar chaves SSH (add, list, del)")
 	fmt.Println("\nExemplos:")
-	fmt.Println("  ./dirmate serve")
-	fmt.Println("  ./dirmate shell")
-	fmt.Println("  ./dirmate user add -uid fulano -name \"Fulano\" -type aluno")
-	fmt.Println("  ./dirmate group list")
-	fmt.Println("\nPara ajuda específica, digite: ./dirmate <comando> -h")
+	fmt.Println("  ./ldapmate serve")
+	fmt.Println("  ./ldapmate shell")
+	fmt.Println("  ./ldapmate user add -uid fulano -name \"Fulano\" -type aluno")
+	fmt.Println("  ./ldapmate group list")
+	fmt.Println("\nPara ajuda específica, digite: ./ldapmate <comando> -h")
 }
 
 func printShellHelp() {

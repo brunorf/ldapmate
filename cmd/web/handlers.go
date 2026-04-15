@@ -1,7 +1,7 @@
 package main
 
 import (
-	"dirmate/templates"
+	"ldapmate/templates"
 	"fmt"
 	"html/template"
 	"net/http"
