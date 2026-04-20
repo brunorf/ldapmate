@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"syscall"
 
@@ -79,6 +80,100 @@ func printShellHelp() {
 	fmt.Println("  key add|list|del [args]         Gerencia chaves SSH")
 	fmt.Println("  help                            Exibe esta ajuda")
 	fmt.Println("  exit / quit                     Sai do shell")
+	fmt.Println("\nUse 'help <comando>' para ajuda específica (ex: help user)")
+}
+
+func printCommandHelp(cmd string) {
+	switch cmd {
+	case "user":
+		fmt.Println("\n=== Comando: user ===")
+		fmt.Println("Gerencia usuários no diretório LDAP.")
+		fmt.Println("\nSubcomandos:")
+		fmt.Println("  list                    Lista todos os usuários")
+		fmt.Println("  add                     Adiciona um novo usuário")
+		fmt.Println("                          -uid     UID(s) separados por vírgula (obrigatório)")
+		fmt.Println("                          -name    Nome completo (obrigatório)")
+		fmt.Println("                          -type    Categoria do usuário (obrigatório)")
+		fmt.Println("                          -password Senha (opcional, gera aleatória se omitido)")
+		fmt.Println("                          -shell   Login shell (padrão: /bin/bash)")
+		fmt.Println("                          -groups  Grupos associados (separados por vírgula)")
+		fmt.Println("  edit                    Edita um usuário existente")
+		fmt.Println("                          -uid     UID do usuário (obrigatório)")
+		fmt.Println("                          -name    Novo nome")
+		fmt.Println("                          -shell   Novo shell")
+		fmt.Println("                          -groups  Novos grupos (substitui existentes)")
+		fmt.Println("                          -password Nova senha")
+		fmt.Println("  del                     Remove um usuário")
+		fmt.Println("                          -uid     UID do usuário (obrigatório)")
+		fmt.Println("\nExemplos:")
+		fmt.Println("  user list")
+		fmt.Println("  user add -uid fulano -name \"Fulano de Tal\" -type aluno")
+		fmt.Println("  user edit -uid fulano -shell /bin/zsh")
+		fmt.Println("  user del -uid fulano")
+
+	case "group":
+		fmt.Println("\n=== Comando: group ===")
+		fmt.Println("Gerencia grupos no diretório LDAP.")
+		fmt.Println("\nSubcomandos:")
+		fmt.Println("  list                    Lista todos os grupos")
+		fmt.Println("  add                     Cria um novo grupo")
+		fmt.Println("                          -cn      CN do grupo (obrigatório)")
+		fmt.Println("                          -gid     GID numérico (opcional)")
+		fmt.Println("                          -name    Nome do grupo (opcional, usa CN se omitido)")
+		fmt.Println("                          -desc    Descrição do grupo (opcional)")
+		fmt.Println("                          -uid     Membros (UIDs separados por vírgula)")
+		fmt.Println("  edit                    Edita um grupo existente")
+		fmt.Println("                          -cn      CN do grupo (obrigatório)")
+		fmt.Println("                          -desc    Nova descrição")
+		fmt.Println("                          -name    Novo nome")
+		fmt.Println("                          -uid     Novos membros (substitui existentes)")
+		fmt.Println("  del                     Remove um grupo")
+		fmt.Println("                          -cn      CN do grupo (obrigatório)")
+		fmt.Println("\nExemplos:")
+		fmt.Println("  group list")
+		fmt.Println("  group add -cn alunos -gid 1001 -desc \"Grupo de alunos\"")
+		fmt.Println("  group edit -cn alunos -uid fulano,ciclano")
+		fmt.Println("  group del -cn alunos")
+
+	case "key":
+		fmt.Println("\n=== Comando: key ===")
+		fmt.Println("Gerencia chaves SSH dos usuários.")
+		fmt.Println("\nSubcomandos:")
+		fmt.Println("  list                    Lista chaves SSH de um usuário")
+		fmt.Println("                          -uid     UID do usuário (obrigatório)")
+		fmt.Println("  add                     Adiciona uma chave SSH")
+		fmt.Println("                          -uid     UID do usuário (obrigatório)")
+		fmt.Println("                          -key     String da chave SSH (obrigatório)")
+		fmt.Println("  del                     Remove uma chave SSH")
+		fmt.Println("                          -uid     UID do usuário (obrigatório)")
+		fmt.Println("                          -key     String da chave SSH (obrigatório)")
+		fmt.Println("\nExemplos:")
+		fmt.Println("  key list -uid fulano")
+		fmt.Println("  key add -uid fulano -key \"ssh-rsa AAAAB3...\"")
+		fmt.Println("  key del -uid fulano -key \"ssh-rsa AAAAB3...\"")
+
+	case "help":
+		fmt.Println("\n=== Comando: help ===")
+		fmt.Println("Exibe informações de ajuda.")
+		fmt.Println("\nUso:")
+		fmt.Println("  help                    Exibe ajuda geral")
+		fmt.Println("  help <comando>          Exibe ajuda específica de um comando")
+		fmt.Println("\nExemplos:")
+		fmt.Println("  help")
+		fmt.Println("  help user")
+		fmt.Println("  help group")
+
+	case "exit", "quit":
+		fmt.Println("\n=== Comando: exit / quit ===")
+		fmt.Println("Sai do shell interativo.")
+		fmt.Println("\nUso:")
+		fmt.Println("  exit")
+		fmt.Println("  quit")
+
+	default:
+		fmt.Printf("Comando desconhecido: %s\n", cmd)
+		fmt.Println("Use 'help' para ver a lista de comandos disponíveis.")
+	}
 }
 
 func runInteractiveShell() {
@@ -100,11 +195,110 @@ func runInteractiveShell() {
 
 	fmt.Println("=== Shell Interativo LDAP ===")
 	fmt.Println("Digite 'help' para ajuda ou 'exit' para sair. Setas ↑/↓ para histórico.")
+	fmt.Println("Use TAB para autocomplete e 'help <comando>' para ajuda específica.")
 
 	line := liner.NewLiner()
 	defer line.Close()
 
 	line.SetCtrlCAborts(true)
+
+	// Configurar autocomplete
+	validCommands := []string{"user", "group", "key", "help", "exit", "quit"}
+	userActions := []string{"add", "edit", "list", "del"}
+	groupActions := []string{"add", "edit", "list", "del"}
+	keyActions := []string{"add", "list", "del"}
+
+	line.SetCompleter(func(line string) (s []string) {
+		parts := strings.Fields(line)
+		numParts := len(parts)
+
+		if numParts == 0 {
+			// Completar comandos principais
+			for _, cmd := range validCommands {
+				if strings.HasPrefix(cmd, line) {
+					s = append(s, cmd)
+				}
+			}
+			return
+		}
+
+		firstCmd := parts[0]
+
+		if numParts == 1 {
+			// Completar comandos principais baseado no prefixo digitado
+			for _, cmd := range validCommands {
+				if strings.HasPrefix(cmd, firstCmd) {
+					s = append(s, cmd)
+				}
+			}
+			return
+		}
+
+		// Completar subcomandos/ações
+		secondWord := parts[1]
+		prefix := parts[numParts-1]
+
+		switch firstCmd {
+		case "user":
+			for _, action := range userActions {
+				if strings.HasPrefix(action, secondWord) {
+					if numParts == 2 {
+						s = append(s, action)
+					} else if numParts > 2 && action == secondWord {
+						// Adicionar flags baseadas no último prefixo
+						flags := getUserFlags(action)
+						for _, flag := range flags {
+							if strings.HasPrefix(flag, prefix) && prefix != action {
+								s = append(s, flag)
+							}
+						}
+					}
+				}
+			}
+		case "group":
+			for _, action := range groupActions {
+				if strings.HasPrefix(action, secondWord) {
+					if numParts == 2 {
+						s = append(s, action)
+					} else if numParts > 2 && action == secondWord {
+						flags := getGroupFlags(action)
+						for _, flag := range flags {
+							if strings.HasPrefix(flag, prefix) && prefix != action {
+								s = append(s, flag)
+							}
+						}
+					}
+				}
+			}
+		case "key":
+			for _, action := range keyActions {
+				if strings.HasPrefix(action, secondWord) {
+					if numParts == 2 {
+						s = append(s, action)
+					} else if numParts > 2 && action == secondWord {
+						flags := getKeyFlags(action)
+						for _, flag := range flags {
+							if strings.HasPrefix(flag, prefix) && prefix != action {
+								s = append(s, flag)
+							}
+						}
+					}
+				}
+			}
+		case "help":
+			if numParts == 2 {
+				for _, cmd := range validCommands {
+					if cmd != "help" && cmd != "exit" && cmd != "quit" {
+						if strings.HasPrefix(cmd, secondWord) {
+							s = append(s, cmd)
+						}
+					}
+				}
+			}
+		}
+
+		return
+	})
 
 	for {
 		cmdLine, err := line.Prompt("ldap> ")
@@ -125,6 +319,15 @@ func runInteractiveShell() {
 			continue
 		}
 
+		// Verificar se é um comando de ajuda específica
+		if strings.HasPrefix(cmdLine, "help ") {
+			parts := strings.Fields(cmdLine)
+			if len(parts) >= 2 {
+				printCommandHelp(parts[1])
+			}
+			continue
+		}
+
 		args := parseCommandLine(cmdLine)
 		if len(args) == 0 {
 			continue
@@ -132,6 +335,60 @@ func runInteractiveShell() {
 
 		handleCommand(backend, args)
 	}
+}
+
+// getUserFlags retorna as flags disponíveis para cada ação do comando user
+func getUserFlags(action string) []string {
+	flags := []string{}
+	baseFlags := []string{"-uid=", "-name=", "-type=", "-password=", "-shell=", "-groups="}
+
+	switch action {
+	case "add":
+		flags = append(flags, baseFlags...)
+	case "edit":
+		flags = append(flags, "-uid=", "-name=", "-shell=", "-groups=", "-password=")
+	case "del":
+		flags = append(flags, "-uid=")
+	case "list":
+		// list não tem flags
+	}
+	sort.Strings(flags)
+	return flags
+}
+
+// getGroupFlags retorna as flags disponíveis para cada ação do comando group
+func getGroupFlags(action string) []string {
+	flags := []string{}
+	baseFlags := []string{"-cn=", "-gid=", "-name=", "-desc=", "-uid="}
+
+	switch action {
+	case "add":
+		flags = append(flags, baseFlags...)
+	case "edit":
+		flags = append(flags, "-cn=", "-desc=", "-name=", "-uid=")
+	case "del":
+		flags = append(flags, "-cn=")
+	case "list":
+		// list não tem flags
+	}
+	sort.Strings(flags)
+	return flags
+}
+
+// getKeyFlags retorna as flags disponíveis para cada ação do comando key
+func getKeyFlags(action string) []string {
+	flags := []string{}
+
+	switch action {
+	case "add":
+		flags = append(flags, "-uid=", "-key=")
+	case "del":
+		flags = append(flags, "-uid=", "-key=")
+	case "list":
+		flags = append(flags, "-uid=")
+	}
+	sort.Strings(flags)
+	return flags
 }
 
 func parseCommandLine(cmd string) []string {
