@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"ldapmate/internal/config"
 	"github.com/go-ldap/ldap/v3"
+	"ldapmate/internal/config"
 )
 
 var ranges = map[string][2]int{
@@ -103,6 +103,21 @@ func (b *LDAPBackend) GetUser(userDN string) (*User, error) {
 		Category:  b.getCategoryFromUID(uidNum),
 		Aliases:   aliases,
 	}, nil
+}
+
+// UserExists verifica se um usuário com o UID especificado existe no diretório
+func (b *LDAPBackend) UserExists(uid string) (bool, error) {
+	sr := ldap.NewSearchRequest(
+		b.BaseDN, ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
+		fmt.Sprintf("(&(objectClass=posixAccount)(uid=%s))", ldap.EscapeFilter(uid)),
+		[]string{"dn"},
+		nil,
+	)
+	res, err := b.Conn.Search(sr)
+	if err != nil {
+		return false, err
+	}
+	return len(res.Entries) > 0, nil
 }
 
 func (b *LDAPBackend) GetSSHKeys(userDN string) ([]string, error) {
