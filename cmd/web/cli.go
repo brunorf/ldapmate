@@ -234,63 +234,97 @@ func runInteractiveShell() {
 			return
 		}
 
-		// Completar subcomandos/ações
+		// Completar subcomandos/ações e flags
 		secondWord := parts[1]
 		prefix := parts[numParts-1]
 
 		switch firstCmd {
 		case "user":
-			for _, action := range userActions {
-				if strings.HasPrefix(action, secondWord) {
-					if numParts == 2 {
-						s = append(s, action)
-					} else if numParts > 2 && action == secondWord {
-						// Adicionar flags baseadas no último prefixo
-						flags := getUserFlags(action)
-						for _, flag := range flags {
-							if strings.HasPrefix(flag, prefix) && prefix != action {
-								s = append(s, flag)
-							}
+			// Verificar se estamos completando o subcomando (segunda palavra)
+			if numParts == 2 {
+				for _, action := range userActions {
+					if strings.HasPrefix(action, secondWord) {
+						// Retornar a linha completa com o autocomplete
+						s = append(s, "user "+action)
+					}
+				}
+			} else {
+				// Estamos completando flags ou valores após o subcomando
+				action := secondWord
+				// Verificar se a segunda palavra é realmente uma ação válida
+				isAction := false
+				for _, a := range userActions {
+					if a == action {
+						isAction = true
+						break
+					}
+				}
+				if isAction {
+					flags := getUserFlags(action)
+					for _, flag := range flags {
+						if strings.HasPrefix(flag, prefix) {
+							s = append(s, flag)
 						}
 					}
 				}
 			}
 		case "group":
-			for _, action := range groupActions {
-				if strings.HasPrefix(action, secondWord) {
-					if numParts == 2 {
-						s = append(s, action)
-					} else if numParts > 2 && action == secondWord {
-						flags := getGroupFlags(action)
-						for _, flag := range flags {
-							if strings.HasPrefix(flag, prefix) && prefix != action {
-								s = append(s, flag)
-							}
+			if numParts == 2 {
+				for _, action := range groupActions {
+					if strings.HasPrefix(action, secondWord) {
+						s = append(s, "group "+action)
+					}
+				}
+			} else {
+				action := secondWord
+				isAction := false
+				for _, a := range groupActions {
+					if a == action {
+						isAction = true
+						break
+					}
+				}
+				if isAction {
+					flags := getGroupFlags(action)
+					for _, flag := range flags {
+						if strings.HasPrefix(flag, prefix) {
+							s = append(s, flag)
 						}
 					}
 				}
 			}
 		case "key":
-			for _, action := range keyActions {
-				if strings.HasPrefix(action, secondWord) {
-					if numParts == 2 {
-						s = append(s, action)
-					} else if numParts > 2 && action == secondWord {
-						flags := getKeyFlags(action)
-						for _, flag := range flags {
-							if strings.HasPrefix(flag, prefix) && prefix != action {
-								s = append(s, flag)
-							}
+			if numParts == 2 {
+				for _, action := range keyActions {
+					if strings.HasPrefix(action, secondWord) {
+						s = append(s, "key "+action)
+					}
+				}
+			} else {
+				action := secondWord
+				isAction := false
+				for _, a := range keyActions {
+					if a == action {
+						isAction = true
+						break
+					}
+				}
+				if isAction {
+					flags := getKeyFlags(action)
+					for _, flag := range flags {
+						if strings.HasPrefix(flag, prefix) {
+							s = append(s, flag)
 						}
 					}
 				}
 			}
 		case "help":
+			// Completar nomes de comandos após "help"
 			if numParts == 2 {
 				for _, cmd := range validCommands {
 					if cmd != "help" && cmd != "exit" && cmd != "quit" {
 						if strings.HasPrefix(cmd, secondWord) {
-							s = append(s, cmd)
+							s = append(s, "help "+cmd)
 						}
 					}
 				}
@@ -491,6 +525,18 @@ func handleUserCommand(backend *ldapclient.LDAPBackend, action string, args []st
 			fmt.Println("Erro: -uid, -name e -type são obrigatórios.")
 			return
 		}
+
+		// Verificar se o usuário já existe
+		exists, err := backend.UserExists(primaryUID)
+		if err != nil {
+			fmt.Printf("Erro ao verificar existência do usuário: %v\n", err)
+			return
+		}
+		if exists {
+			fmt.Printf("Erro: O usuário '%s' já existe.\n", primaryUID)
+			return
+		}
+
 		p := *pass
 		if p == "" {
 			p = generateRandomPassword(12)
